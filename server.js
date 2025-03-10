@@ -72,9 +72,13 @@ const queue = async.queue(async (task, done) => {
         }, elementSelector);
 
         const element = await page.$(elementSelector);
-        const screenshot = await element.screenshot({ type: 'png', encoding: 'base64' });
+        const screenshot = await element.screenshot({
+          type: 'jpeg',
+          encoding: 'base64',
+          quality: 90
+        });
 
-        res.json({ image: `data:image/png;base64,${screenshot}` });
+        res.json({ image: `data:image/jpeg;base64,${screenshot}` });
     } catch (error) {
         console.error('Erro durante a renderização:', error);
         res.status(500).json({ error: 'Erro ao renderizar o elemento.' });
