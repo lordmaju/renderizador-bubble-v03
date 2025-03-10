@@ -1,20 +1,49 @@
 const puppeteer = require('puppeteer');
 let browser;
+let pageCount = 0;
+const MAX_PAGES_BEFORE_ROTATION = 50;
 
 async function getBrowser() {
   if (!browser) {
+    console.log('Iniciando instância fresh do navegador...');
     browser = await puppeteer.launch({
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
       headless: true,
       timeout: 30000
     });
   }
+
+  pageCount++;
+  console.log('Contador de páginas criado:', pageCount);
+
+  if (pageCount >= MAX_PAGES_BEFORE_ROTATION) {
+    console.log(`Rotacionando o navegador após ${pageCount} páginas...`);
+    await browser.close();
+    browser = null;
+    pageCount = 0;
+    console.log('Iniciando nova instância do navegador após rotação...');
+    browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      headless: true,
+      timeout: 30000
+    });
+  }
+
   return browser;
 }
 
 const express = require('express');
 const async = require('async'); // Importa o pacote async
+const rateLimit = require('express-rate-limit');
+
+const limiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minuto
+  max: 20,            // até 20 requisições/min por IP
+  message: 'Muitas requisições, tente novamente mais tarde.'
+});
+
 const app = express();
+app.use(limiter);
 
 // Cria uma fila com um número máximo de 2 tarefas executadas de cada vez
 const queue = async.queue(async (task, done) => {
@@ -54,6 +83,7 @@ const queue = async.queue(async (task, done) => {
         }
     }
 
+    console.log('Finalizou processamento da URL:', url);
     done();  // Chama o done para indicar que a tarefa foi concluída
 }, 2);  // Limitando a fila para processar 2 tarefas por vez
 
