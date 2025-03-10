@@ -6,7 +6,7 @@ async function getBrowser() {
     browser = await puppeteer.launch({
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
       headless: true,
-      timeout: 90000
+      timeout: 30000
     });
   }
   return browser;
@@ -16,7 +16,7 @@ const express = require('express');
 const async = require('async'); // Importa o pacote async
 const app = express();
 
-// Cria uma fila com um número máximo de 1 tarefa executada de cada vez
+// Cria uma fila com um número máximo de 2 tarefas executadas de cada vez
 const queue = async.queue(async (task, done) => {
     console.log('Processando solicitação:', task.url);  // Log para saber qual solicitação está sendo processada
 
@@ -26,9 +26,9 @@ const queue = async.queue(async (task, done) => {
     try {
         const br = await getBrowser();
         page = await br.newPage();
-        await page.setViewport({ width: 1500, height: 1500 });
+        await page.setViewport({ width: 1080, height: 1080 });
 
-        await page.goto(url, { waitUntil: 'networkidle0', timeout: 90000 });
+        await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
 
         const elementSelector = '#templete';
         await page.waitForSelector(elementSelector);
@@ -55,7 +55,7 @@ const queue = async.queue(async (task, done) => {
     }
 
     done();  // Chama o done para indicar que a tarefa foi concluída
-}, 1);  // Limitando a fila para processar 1 tarefa por vez
+}, 2);  // Limitando a fila para processar 2 tarefas por vez
 
 // Permite receber JSON no body da requisição
 app.use(express.json());
