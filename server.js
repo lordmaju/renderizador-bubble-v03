@@ -1,4 +1,17 @@
 const puppeteer = require('puppeteer');
+let browser;
+
+async function getBrowser() {
+  if (!browser) {
+    browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      headless: true,
+      timeout: 90000
+    });
+  }
+  return browser;
+}
+
 const express = require('express');
 const async = require('async'); // Importa o pacote async
 const app = express();
@@ -8,15 +21,11 @@ const queue = async.queue(async (task, done) => {
     console.log('Processando solicitação:', task.url);  // Log para saber qual solicitação está sendo processada
 
     const { url, res } = task;
+    let page;
 
     try {
-        const browser = await puppeteer.launch({
-            args: ['--no-sandbox', '--disable-setuid-sandbox'],
-            headless: true,
-            timeout: 90000
-        });
-
-        const page = await browser.newPage();
+        const br = await getBrowser();
+        page = await br.newPage();
         await page.setViewport({ width: 1500, height: 1500 });
 
         await page.goto(url, { waitUntil: 'networkidle0', timeout: 90000 });
@@ -35,12 +44,14 @@ const queue = async.queue(async (task, done) => {
         const element = await page.$(elementSelector);
         const screenshot = await element.screenshot({ type: 'png', encoding: 'base64' });
 
-        await browser.close();
-
         res.json({ image: `data:image/png;base64,${screenshot}` });
     } catch (error) {
         console.error('Erro durante a renderização:', error);
         res.status(500).json({ error: 'Erro ao renderizar o elemento.' });
+    } finally {
+        if (page) {
+            await page.close();
+        }
     }
 
     done();  // Chama o done para indicar que a tarefa foi concluída
