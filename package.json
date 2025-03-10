@@ -1,0 +1,19 @@
+{
+  "name": "renderizador-v02",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "async": "^3.2.6",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "puppeteer": "^23.11.1"
+  }
+}
